@@ -10,6 +10,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+
+	types "ninja-agent/bot"
+	"ninja-agent/bot/utils"
 )
 
 func StartDayWatcher(ctx context.Context, col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64) {
@@ -34,7 +37,7 @@ func StartDayWatcher(ctx context.Context, col *mongo.Collection, bot *tgbotapi.B
 }
 
 func ensureDay(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64) error {
-	today := DateOnly(time.Now())
+	today := utils.DateOnly(time.Now())
 
 	filter := bson.M{"date": today}
 	count, err := col.CountDocuments(context.Background(), filter)
@@ -46,7 +49,7 @@ func ensureDay(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64) error 
 		return nil
 	}
 
-	day := Day{
+	day := types.Day{
 		Date:  today,
 		Tasks: generateRecurringTasks(),
 	}
@@ -62,8 +65,8 @@ func ensureDay(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64) error 
 	return nil
 }
 
-func generateRecurringTasks() []Task {
-	return []Task{
+func generateRecurringTasks() []types.Task {
+	return []types.Task{
 		{
 			ID:          primitive.NewObjectID(),
 			Description: "🌅 Утренняя медитация",

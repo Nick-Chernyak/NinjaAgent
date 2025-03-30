@@ -10,6 +10,8 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	"ninja-agent/bot/commands"
 )
 
 func main() {
@@ -51,22 +53,22 @@ func main() {
 
 		switch cmd {
 		case "todo":
-			err = Todo(coll, bot, chatID, context.Background(), args)
+			err = commands.Todo(coll, bot, chatID, context.Background(), args)
 			if err != nil {
 				log.Println("Error adding todo:", err)
 			}
 		case "show":
-			err = Show(coll, bot, chatID, context.Background())
+			err = commands.Show(coll, bot, chatID, context.Background())
 			if err != nil {
 				log.Println("Error showing todos:", err)
 			}
 		case "done":
-			err = Done(coll, bot, chatID, context.Background(), args)
+			err = commands.Done(coll, bot, chatID, context.Background(), args)
 			if err != nil {
 				log.Println("Error marking todo as done:", err)
 			}
 		case "remove":
-			err = Remove(coll, bot, chatID, context.Background(), args)
+			err = commands.Remove(coll, bot, chatID, context.Background(), args)
 			if err != nil {
 				log.Println("Error removing todo:", err)
 			}
