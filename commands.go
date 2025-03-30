@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -76,10 +77,11 @@ func Done(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64, ctx context
 	}
 
 	filter := builddayfilter()
+	taskIndex := taskNum - 1
 	update := bson.M{
 		"$set": bson.M{
-			"tasks.$[elem].is_done": true,
-			"tasks.$[elem].done_at": time.Now(),
+			fmt.Sprintf("tasks.%d.is_done", taskIndex): true,
+			fmt.Sprintf("tasks.%d.done_at", taskIndex): time.Now(),
 		},
 	}
 
