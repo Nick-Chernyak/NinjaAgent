@@ -36,7 +36,7 @@ func StartDayWatcher(ctx context.Context, col *mongo.Collection, bot *tgbotapi.B
 func ensureDay(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64) error {
 	today := DateOnly(time.Now())
 
-	filter := bson.M{"day": today}
+	filter := bson.M{"date": today}
 	count, err := col.CountDocuments(context.Background(), filter)
 	if err != nil {
 		return err
