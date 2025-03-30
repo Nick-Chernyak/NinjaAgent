@@ -1,0 +1,41 @@
+# Go build artifacts
+/bin/
+/build/
+/dist/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Dependency directories (Go modules, vendor)
+vendor/
+
+# Go workspace file (optional, if you use go work)
+go.work
+go.work.sum
+
+# Logs
+*.log
+
+# IDEs
+.vscode/
+.idea/
+
+# OS / Editor garbage
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Secrets
+.env
+.env.local
+.env.*.local
+secrets.go
+config/secrets.go
+
+# Test output
+coverage.out
