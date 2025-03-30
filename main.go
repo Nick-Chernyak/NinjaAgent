@@ -78,6 +78,12 @@ func StartCache(ctx context.Context, mongoColl *mongo.Collection, ttl time.Durat
 	return reqs
 }
 
+func refreshCache(chatID int64, cache chan<- CacheRequest) {
+	dummy := make(chan []ToDo)
+	cache <- CacheRequest{ChatID: chatID, Action: "refresh", Reply: dummy}
+	<-dummy
+}
+
 func main() {
 	fmt.Println("Starting bot...")
 
@@ -181,6 +187,7 @@ func main() {
 			todo.DoneAt = &now
 			_, err = coll.UpdateByID(ctx, todo.ID, bson.M{"$set": bson.M{"is_done": true, "done_at": now}})
 			if err == nil {
+				refreshCache(chatID, cache)
 				bot.Send(tgbotapi.NewMessage(chatID, "✅ Задача выполнена."))
 			}
 
@@ -200,6 +207,7 @@ func main() {
 			todo := todos[index-1]
 			_, err = coll.DeleteOne(ctx, bson.M{"_id": todo.ID})
 			if err == nil {
+				refreshCache(chatID, cache)
 				bot.Send(tgbotapi.NewMessage(chatID, "🗑️ Задача удалена."))
 			}
 
@@ -229,6 +237,7 @@ func main() {
 			todo := todos[index-1]
 			_, err = coll.UpdateByID(ctx, todo.ID, bson.M{"$set": bson.M{"description": newText}})
 			if err == nil {
+				refreshCache(chatID, cache)
 				bot.Send(tgbotapi.NewMessage(chatID, "✏️ Задача обновлена."))
 			}
 		}
