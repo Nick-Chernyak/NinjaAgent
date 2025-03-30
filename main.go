@@ -33,6 +33,8 @@ func main() {
 	u.Timeout = 60
 	updates := bot.GetUpdatesChan(u)
 
+	StartDayWatcher(context.Background(), coll, bot, allowedUser)
+
 	for update := range updates {
 		if update.Message == nil || !update.Message.IsCommand() {
 			continue

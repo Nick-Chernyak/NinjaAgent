@@ -28,7 +28,7 @@ func Todo(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64, ctx context
 		IsDone:      false,
 	}
 
-	filter := builddayfilter()
+	filter := bson.M{"day": DateOnly(time.Now())}
 	update := buildupdate(task)
 	_, err = col.UpdateOne(
 		ctx,
@@ -46,7 +46,7 @@ func Todo(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64, ctx context
 }
 
 func Show(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64, ctx context.Context) (err error) {
-	filter := builddayfilter()
+	filter := bson.M{"day": DateOnly(time.Now())}
 	var dayDoc Day
 	err = col.FindOne(ctx, filter).Decode(&dayDoc)
 	if err != nil {
@@ -78,7 +78,7 @@ func Done(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64, ctx context
 		return
 	}
 
-	filter := builddayfilter()
+	filter := bson.M{"day": DateOnly(time.Now())}
 	taskIndex := taskNum - 1
 	update := bson.M{
 		"$set": bson.M{
@@ -117,7 +117,7 @@ func Remove(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64, ctx conte
 	}
 	taskIndex := taskNum - 1
 
-	filter := builddayfilter()
+	filter := bson.M{"day": DateOnly(time.Now())}
 	var result struct {
 		ID    any    `bson:"_id"`
 		Tasks []Task `bson:"tasks"`
@@ -145,12 +145,6 @@ func Remove(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64, ctx conte
 
 	bot.Send(tgbotapi.NewMessage(chatID, "🗑 Задача удалена!"))
 	return nil
-}
-
-func builddayfilter() bson.M {
-	now := time.Now()
-	day := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-	return bson.M{"day": day}
 }
 
 func buildupdate(task Task) bson.M {
