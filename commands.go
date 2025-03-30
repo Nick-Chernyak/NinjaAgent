@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"slices"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -104,37 +106,45 @@ func Done(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64, ctx context
 func Remove(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64, ctx context.Context, args string) (err error) {
 	args = strings.TrimSpace(args)
 	if args == "" {
-		bot.Send(tgbotapi.NewMessage(chatID, "❌ Укажи номер задачи для удаления."))
-		return
+		bot.Send(tgbotapi.NewMessage(chatID, "❌ Укажи номер задачи после команды."))
+		return nil
 	}
 
 	taskNum, err := strconv.Atoi(args)
 	if err != nil || taskNum < 1 {
 		bot.Send(tgbotapi.NewMessage(chatID, "❌ Неверный номер задачи."))
-		return
+		return nil
 	}
+	taskIndex := taskNum - 1
 
 	filter := builddayfilter()
-	update := bson.M{
-		"$pull": bson.M{
-			"tasks": bson.M{"$eq": taskNum},
-		},
+	var result struct {
+		ID    any    `bson:"_id"`
+		Tasks []Task `bson:"tasks"`
 	}
 
-	result, err := col.UpdateOne(ctx, filter, update)
+	err = col.FindOne(ctx, filter).Decode(&result)
 	if err != nil {
-		bot.Send(tgbotapi.NewMessage(chatID, "❌ Ошибка при удалении задачи."))
-		return
+		bot.Send(tgbotapi.NewMessage(chatID, "❌ Не удалось найти задачи."))
+		return nil
 	}
 
-	if result.ModifiedCount == 0 {
-		bot.Send(tgbotapi.NewMessage(chatID, "❌ Задача не найдена."))
-		return
+	if taskIndex < 0 || taskIndex >= len(result.Tasks) {
+		bot.Send(tgbotapi.NewMessage(chatID, "❌ Неверный номер задачи."))
+		return nil
 	}
 
-	bot.Send(tgbotapi.NewMessage(chatID, "🗑️ Задача удалена."))
+	result.Tasks = slices.Delete(result.Tasks, taskIndex, taskIndex+1)
 
-	return
+	update := bson.M{"$set": bson.M{"tasks": result.Tasks}}
+	_, err = col.UpdateOne(ctx, filter, update)
+	if err != nil {
+		bot.Send(tgbotapi.NewMessage(chatID, "❌ Не удалось удалить задачу."))
+		return nil
+	}
+
+	bot.Send(tgbotapi.NewMessage(chatID, "🗑 Задача удалена!"))
+	return nil
 }
 
 func builddayfilter() bson.M {
