@@ -12,7 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"ninja-agent/bot/background"
-	"ninja-agent/bot/commands"
 )
 
 func main() {
@@ -24,8 +23,8 @@ func main() {
 	tgToken := os.Getenv("TG_TOKEN")
 	allowedUserStr := os.Getenv("ALLOWED_USER")
 
-	coll := initMongoAndgetcoll(mongoURI)
 	allowedUser := setAllowedUser(allowedUserStr)
+	mongoClient := initMongo(mongoURI)
 	bot, err := tgbotapi.NewBotAPI(tgToken)
 	if err != nil {
 		log.Fatal(err)
@@ -36,7 +35,9 @@ func main() {
 	u.Timeout = 60
 	updates := bot.GetUpdatesChan(u)
 
-	background.StartDayWatcher(context.Background(), coll, bot, allowedUser)
+	background.StartDayWatcher(context.Background(), mongoClient.Database("ninja-agent").Collection("todos"), bot, allowedUser)
+
+	executor := NewCommandExecutor(mongoClient, bot)
 
 	for update := range updates {
 		if update.Message == nil || !update.Message.IsCommand() {
@@ -52,32 +53,15 @@ func main() {
 		cmd := update.Message.Command()
 		args := update.Message.CommandArguments()
 
-		switch cmd {
-		case "todo":
-			err = commands.Todo(coll, bot, chatID, context.Background(), args)
-			if err != nil {
-				log.Println("Error adding todo:", err)
-			}
-		case "show":
-			err = commands.Show(coll, bot, chatID, context.Background())
-			if err != nil {
-				log.Println("Error showing todos:", err)
-			}
-		case "done":
-			err = commands.Done(coll, bot, chatID, context.Background(), args)
-			if err != nil {
-				log.Println("Error marking todo as done:", err)
-			}
-		case "remove":
-			err = commands.Remove(coll, bot, chatID, context.Background(), args)
-			if err != nil {
-				log.Println("Error removing todo:", err)
-			}
+		if hanlder, ok := executor.handlers[cmd]; ok {
+			hanlder(chatID, context.Background(), args)
+		} else {
+			bot.Send(tgbotapi.NewMessage(chatID, "❌ Неизвестная команда."))
 		}
 	}
 }
 
-func initMongoAndgetcoll(mongoURI string) *mongo.Collection {
+func initMongo(mongoURI string) *mongo.Client {
 	fmt.Println("Connecting to MongoDB...")
 	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
@@ -85,7 +69,7 @@ func initMongoAndgetcoll(mongoURI string) *mongo.Collection {
 		log.Fatal(err)
 	}
 
-	return client.Database("ninja_agent").Collection("todos")
+	return client
 }
 
 func setAllowedUser(allowedUsersStr string) int64 {

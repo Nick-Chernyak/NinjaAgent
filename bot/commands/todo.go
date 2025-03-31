@@ -6,14 +6,12 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 
 	"ninja-agent/bot/data"
-	"ninja-agent/bot/utils"
+	"ninja-agent/bot/storage"
 )
 
-func Todo(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64, ctx context.Context, desc string) (err error) {
+func Todo(rep *storage.DayTasksRepo, bot *tgbotapi.BotAPI, chatID int64, ctx context.Context, desc string) (err error) {
 
 	desc = strings.TrimSpace(desc)
 	if desc == "" {
@@ -27,16 +25,7 @@ func Todo(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64, ctx context
 		IsDone:      false,
 	}
 
-	filter := bson.M{"date": utils.DateOnly(time.Now())}
-	update := bson.M{
-		"$addToSet": bson.M{
-			"tasks": task,
-		},
-	}
-	_, err = col.UpdateOne(
-		ctx,
-		filter,
-		update)
+	rep.AddTask(ctx, task)
 
 	if err != nil {
 		bot.Send(tgbotapi.NewMessage(chatID, "❌ Ошибка при добавлении в базу."))
