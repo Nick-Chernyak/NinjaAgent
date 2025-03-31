@@ -32,5 +32,6 @@ func Remove(rep *storage.DayTasksRepo, bot *tgbotapi.BotAPI, chatID int64, ctx c
 	}
 
 	bot.Send(tgbotapi.NewMessage(chatID, "🗑 Задача удалена!"))
+	Show(rep, bot, chatID, ctx)
 	return nil
 }

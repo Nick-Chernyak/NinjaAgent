@@ -31,6 +31,7 @@ func Done(rep *storage.DayTasksRepo, bot *tgbotapi.BotAPI, chatID int64, ctx con
 	}
 
 	bot.Send(tgbotapi.NewMessage(chatID, "✅ Задача выполнена!"))
+	Show(rep, bot, chatID, ctx)
 
 	return
 }

@@ -20,16 +20,16 @@ func NewCommandExecutor(client *mongo.Client, bot *tgbotapi.BotAPI) *CommandExec
 
 	repo := storage.NewDayTasksRepo(client.Database("ninja_agent"))
 
-	executor.handlers["/todo"] = func(chatID int64, ctx context.Context, args string) {
+	executor.handlers["todo"] = func(chatID int64, ctx context.Context, args string) {
 		commands.Todo(repo, bot, chatID, ctx, args)
 	}
-	executor.handlers["/done"] = func(chatID int64, ctx context.Context, args string) {
+	executor.handlers["done"] = func(chatID int64, ctx context.Context, args string) {
 		commands.Done(repo, bot, chatID, ctx, args)
 	}
-	executor.handlers["/remove"] = func(chatID int64, ctx context.Context, args string) {
+	executor.handlers["remove"] = func(chatID int64, ctx context.Context, args string) {
 		commands.Remove(repo, bot, chatID, ctx, args)
 	}
-	executor.handlers["/show"] = func(chatID int64, ctx context.Context, args string) {
+	executor.handlers["show"] = func(chatID int64, ctx context.Context, args string) {
 		commands.Show(repo, bot, chatID, ctx)
 	}
 

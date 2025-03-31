@@ -5,10 +5,10 @@ import (
 	"strings"
 	"time"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-
 	"ninja-agent/bot/data"
 	"ninja-agent/bot/storage"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 func Todo(rep *storage.DayTasksRepo, bot *tgbotapi.BotAPI, chatID int64, ctx context.Context, desc string) (err error) {
@@ -33,6 +33,8 @@ func Todo(rep *storage.DayTasksRepo, bot *tgbotapi.BotAPI, chatID int64, ctx con
 	}
 
 	bot.Send(tgbotapi.NewMessage(chatID, "✅ Added!"))
+
+	Show(rep, bot, chatID, ctx)
 
 	return
 }

@@ -40,6 +40,7 @@ func (repo DayTasksRepo) GetCurrentDay(ctx context.Context) (data.Day, error) {
 func (repo DayTasksRepo) GetCurrentTasks(ctx context.Context) ([]data.Task, error) {
 	var result TaskProj
 	err := repo.collection.FindOne(ctx, currentDayFilter).Decode(&result)
+
 	if err != nil {
 		return nil, err
 	}
