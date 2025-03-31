@@ -55,6 +55,8 @@ func main() {
 			if err != nil {
 				log.Println("Error adding todo:", err)
 			}
+			postShow(coll, bot, chatID, context.Background())
+
 		case "show":
 			err = Show(coll, bot, chatID, context.Background())
 			if err != nil {
@@ -65,12 +67,21 @@ func main() {
 			if err != nil {
 				log.Println("Error marking todo as done:", err)
 			}
+			postShow(coll, bot, chatID, context.Background())
 		case "remove":
 			err = Remove(coll, bot, chatID, context.Background(), args)
 			if err != nil {
 				log.Println("Error removing todo:", err)
 			}
+			postShow(coll, bot, chatID, context.Background())
 		}
+	}
+}
+
+func postShow(coll *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64, ctx context.Context) {
+	err := Show(coll, bot, chatID, context.Background())
+	if err != nil {
+		log.Println("Error showing todos:", err)
 	}
 }
 
