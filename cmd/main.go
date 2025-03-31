@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
+	"ninja-agent/bot/background"
 	"ninja-agent/bot/commands"
 )
 
@@ -35,7 +36,7 @@ func main() {
 	u.Timeout = 60
 	updates := bot.GetUpdatesChan(u)
 
-	StartDayWatcher(context.Background(), coll, bot, allowedUser)
+	background.StartDayWatcher(context.Background(), coll, bot, allowedUser)
 
 	for update := range updates {
 		if update.Message == nil || !update.Message.IsCommand() {

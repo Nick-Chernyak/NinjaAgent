@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	types "ninja-agent/bot"
+	"ninja-agent/bot/data"
 	"ninja-agent/bot/utils"
 )
 
@@ -21,7 +21,7 @@ func Todo(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64, ctx context
 		return
 	}
 
-	task := types.Task{
+	task := data.Task{
 		CreatedAt:   time.Now(),
 		Description: desc,
 		IsDone:      false,

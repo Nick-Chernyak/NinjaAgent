@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	types "ninja-agent/bot"
+	"ninja-agent/bot/data"
 	"ninja-agent/bot/utils"
 )
 
@@ -31,8 +31,8 @@ func Remove(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64, ctx conte
 
 	filter := bson.M{"date": utils.DateOnly(time.Now())}
 	var result struct {
-		ID    any          `bson:"_id"`
-		Tasks []types.Task `bson:"tasks"`
+		ID    any         `bson:"_id"`
+		Tasks []data.Task `bson:"tasks"`
 	}
 
 	err = col.FindOne(ctx, filter).Decode(&result)

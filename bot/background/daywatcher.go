@@ -1,4 +1,4 @@
-package main
+package background
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	types "ninja-agent/bot"
+	"ninja-agent/bot/data"
 	"ninja-agent/bot/utils"
 )
 
@@ -49,7 +49,7 @@ func ensureDay(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64) error 
 		return nil
 	}
 
-	day := types.Day{
+	day := data.Day{
 		Date:  today,
 		Tasks: generateRecurringTasks(),
 	}
@@ -65,14 +65,8 @@ func ensureDay(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64) error 
 	return nil
 }
 
-func generateRecurringTasks() []types.Task {
-	return []types.Task{
-		{
-			ID:          primitive.NewObjectID(),
-			Description: "🌅 Утренняя медитация",
-			CreatedAt:   time.Now(),
-			IsDone:      false,
-		},
+func generateRecurringTasks() []data.Task {
+	return []data.Task{
 		{
 			ID:          primitive.NewObjectID(),
 			Description: "📓 Написать 3 мысли",

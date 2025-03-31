@@ -10,13 +10,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	types "ninja-agent/bot"
+	"ninja-agent/bot/data"
 	"ninja-agent/bot/utils"
 )
 
 func Show(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64, ctx context.Context) (err error) {
 	filter := bson.M{"date": utils.DateOnly(time.Now())}
-	var dayDoc types.Day
+	var dayDoc data.Day
 	err = col.FindOne(ctx, filter).Decode(&dayDoc)
 	if err != nil {
 		bot.Send(tgbotapi.NewMessage(chatID, "❌ Ошибка при получении задач."))
@@ -34,7 +34,7 @@ func Show(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64, ctx context
 	return
 }
 
-func FormatTasks(tasks []types.Task) string {
+func FormatTasks(tasks []data.Task) string {
 	var sb strings.Builder
 	for i, task := range tasks {
 		status := "❌"
