@@ -44,9 +44,10 @@ func main() {
 	u.Timeout = 60
 	updates := bot.GetUpdatesChan(u)
 
-	background.StartDayWatcher(context.Background(), mongoClient.Database("ninja_agent").Collection("todos"), bot, allowedUsers)
+	background.StartDayWatcher(context.Background(), mongoClient.Database("ninja_agent"), bot, allowedUsers)
 
-	executor := NewCommandExecutor(mongoClient, bot)
+	dailyExecutor := NewDailyCommandExecutor(mongoClient, bot)
+	groupExecutor := NewGroupExecutor(mongoClient, bot)
 
 	for update := range updates {
 		if update.Message == nil || !update.Message.IsCommand() {
@@ -62,7 +63,15 @@ func main() {
 		cmd := update.Message.Command()
 		args := update.Message.CommandArguments()
 
-		if handler, ok := executor.handlers[cmd]; ok {
+		if isGroupChat(update) {
+			if handler, ok := groupExecutor.handlers[cmd]; ok {
+				handler(chatID, context.Background(), args)
+			} else {
+				bot.Send(tgbotapi.NewMessage(chatID, "❌ Неизвестная команда."))
+			}
+		}
+
+		if handler, ok := dailyExecutor.handlers[cmd]; ok {
 			handler(chatID, context.Background(), args)
 		} else {
 			bot.Send(tgbotapi.NewMessage(chatID, "❌ Неизвестная команда."))
@@ -102,8 +111,12 @@ func parseInt64ListFromEnv(envVar string) ([]int64, error) {
 }
 
 func getchatID(upd tgbotapi.Update, allowed int64) int64 {
-	if upd.Message.Chat.ID == allowed && upd.Message.Chat.Type == "group" {
+	if upd.Message.Chat.ID == allowed && isGroupChat(upd) {
 		return upd.Message.Chat.ID
 	}
 	return upd.Message.From.ID
+}
+
+func isGroupChat(upd tgbotapi.Update) bool {
+	return upd.Message.Chat.Type == "group"
 }

@@ -15,7 +15,7 @@ import (
 	"ninja-agent/bot/utils"
 )
 
-func StartDayWatcher(ctx context.Context, col *mongo.Collection, bot *tgbotapi.BotAPI, allowedUsers []int64) {
+func StartDayWatcher(ctx context.Context, db *mongo.Database, bot *tgbotapi.BotAPI, allowedUsers []int64) {
 
 	fmt.Println("🕒 Запуск DayWatcher...")
 
@@ -27,7 +27,7 @@ func StartDayWatcher(ctx context.Context, col *mongo.Collection, bot *tgbotapi.B
 				return
 			default:
 				for _, chatID := range allowedUsers {
-					err := ensureDay(col, bot, chatID)
+					err := ensureDay(db.Collection("todos"), bot, chatID)
 
 					if err != nil {
 						log.Println("DayWatcher error:", err)
@@ -35,6 +35,14 @@ func StartDayWatcher(ctx context.Context, col *mongo.Collection, bot *tgbotapi.B
 
 					log.Printf("🗓️ Проверка на новый день для чата %d завершена.\n", chatID)
 				}
+
+				err := archiveGroupDoneTasks(db.Collection("group_tasks"))
+				if err != nil {
+					log.Println("Error archiving done tasks:", err)
+				} else {
+					log.Println("Archived done tasks successfully!")
+				}
+
 				time.Sleep(1 * time.Hour)
 			}
 		}
@@ -106,4 +114,24 @@ func getyesterdayNotComplTasks(col *mongo.Collection, cahtID int64) []data.Task 
 	}
 
 	return notCompletedTasks
+}
+
+func archiveGroupDoneTasks(col *mongo.Collection) error {
+	filter := bson.M{"is_done": true}
+	update := bson.M{
+		"$set": bson.M{"is_archived": true},
+	}
+
+	result, err := col.UpdateMany(context.Background(), filter, update)
+	if err != nil {
+		return err
+	}
+
+	if result.ModifiedCount == 0 {
+		log.Println("No tasks to archive")
+	} else {
+		log.Printf("Archived %d tasks\n", result.ModifiedCount)
+	}
+
+	return nil
 }
