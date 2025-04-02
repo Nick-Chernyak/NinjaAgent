@@ -69,12 +69,13 @@ func main() {
 			} else {
 				bot.Send(tgbotapi.NewMessage(chatID, "❌ Неизвестная команда."))
 			}
-		}
-
-		if handler, ok := dailyExecutor.handlers[cmd]; ok {
-			handler(chatID, context.Background(), args)
 		} else {
-			bot.Send(tgbotapi.NewMessage(chatID, "❌ Неизвестная команда."))
+
+			if handler, ok := dailyExecutor.handlers[cmd]; ok {
+				handler(chatID, context.Background(), args)
+			} else {
+				bot.Send(tgbotapi.NewMessage(chatID, "❌ Неизвестная команда."))
+			}
 		}
 	}
 }
