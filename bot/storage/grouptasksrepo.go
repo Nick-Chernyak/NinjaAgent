@@ -22,7 +22,7 @@ func NewGroupTaskRepo(db *mongo.Database) *GroupTaskRepo {
 
 func (repo GroupTaskRepo) GetCurrentTasks(ctx context.Context, chatID int64) ([]data.GroupTask, error) {
 	var result []data.GroupTask
-	allNotDoneTasksFilter := bson.M{"is_done": false, "is_archived": false}
+	allNotDoneTasksFilter := bson.M{"is_archived": false}
 	cur, err := repo.collection.Find(ctx, allNotDoneTasksFilter)
 	if err != nil {
 		log.Println("Error finding tasks:", err)
