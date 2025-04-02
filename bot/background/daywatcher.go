@@ -15,7 +15,7 @@ import (
 	"ninja-agent/bot/utils"
 )
 
-func StartDayWatcher(ctx context.Context, col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64) {
+func StartDayWatcher(ctx context.Context, col *mongo.Collection, bot *tgbotapi.BotAPI, allowedUsers []int64) {
 
 	fmt.Println("🕒 Запуск DayWatcher...")
 
@@ -26,11 +26,14 @@ func StartDayWatcher(ctx context.Context, col *mongo.Collection, bot *tgbotapi.B
 				log.Println("📴 DayWatcher остановлен")
 				return
 			default:
-				err := ensureDay(col, bot, chatID)
-				if err != nil {
-					log.Println("DayWatcher error:", err)
+				for _, chatID := range allowedUsers {
+					err := ensureDay(col, bot, chatID)
+
+					if err != nil {
+						log.Println("DayWatcher error:", err)
+					}
+					time.Sleep(1 * time.Hour)
 				}
-				time.Sleep(1 * time.Hour)
 			}
 		}
 	}()

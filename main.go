@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
+	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -21,9 +21,14 @@ func main() {
 
 	mongoURI := os.Getenv("MONGO_URI")
 	tgToken := os.Getenv("TG_TOKEN")
-	allowedUserStr := os.Getenv("ALLOWED_USER")
+	allowedUserIds := os.Getenv("ALLOWED_USER")
+	if allowedUserIds == "" {
+		fmt.Println("ALLOWED_USER is not set")
+		return
+	}
 
-	allowedUser := setAllowedUser(allowedUserStr)
+	parts := strings.Split(allowedUserIds, ",")
+	allowedUsers := make([]int64, 0, len(parts))
 	mongoClient := initMongo(mongoURI)
 	bot, err := tgbotapi.NewBotAPI(tgToken)
 	if err != nil {
@@ -35,7 +40,7 @@ func main() {
 	u.Timeout = 60
 	updates := bot.GetUpdatesChan(u)
 
-	background.StartDayWatcher(context.Background(), mongoClient.Database("ninja_agent").Collection("todos"), bot, allowedUser)
+	background.StartDayWatcher(context.Background(), mongoClient.Database("ninja_agent").Collection("todos"), bot, allowedUsers)
 
 	executor := NewCommandExecutor(mongoClient, bot)
 
@@ -44,7 +49,7 @@ func main() {
 			continue
 		}
 
-		if update.Message.From.ID != allowedUser {
+		if containsId(allowedUsers, int64(update.Message.From.ID)) == false {
 			bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "❌ У вас нет доступа к этому боту."))
 			continue
 		}
@@ -72,11 +77,11 @@ func initMongo(mongoURI string) *mongo.Client {
 	return client
 }
 
-func setAllowedUser(allowedUsersStr string) int64 {
-	allowedUser, err := strconv.ParseInt(allowedUsersStr, 10, 64)
-	if err != nil {
-		log.Fatalf("Invalid ALLOWED_USER value: %v", err)
+func containsId(slice []int64, val int64) bool {
+	for _, v := range slice {
+		if v == val {
+			return true
+		}
 	}
-
-	return allowedUser
+	return false
 }
