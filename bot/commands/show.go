@@ -13,7 +13,7 @@ import (
 
 func Show(rep *storage.DayTasksRepo, bot *tgbotapi.BotAPI, chatID int64, ctx context.Context) (err error) {
 
-	tasks, err := rep.GetCurrentTasks(ctx)
+	tasks, err := rep.GetCurrentTasks(ctx, chatID)
 	if err != nil {
 		bot.Send(tgbotapi.NewMessage(chatID, "❌ Ошибка при получении задач."))
 		return

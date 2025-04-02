@@ -24,7 +24,7 @@ func Remove(rep *storage.DayTasksRepo, bot *tgbotapi.BotAPI, chatID int64, ctx c
 	}
 	taskIndex := taskNum - 1
 
-	err = rep.RemoveTask(ctx, taskIndex)
+	err = rep.RemoveTask(ctx, chatID, taskIndex)
 
 	if err != nil {
 		bot.Send(tgbotapi.NewMessage(chatID, "❌ Не удалось удалить задачу."))

@@ -25,7 +25,7 @@ func Todo(rep *storage.DayTasksRepo, bot *tgbotapi.BotAPI, chatID int64, ctx con
 		IsDone:      false,
 	}
 
-	rep.AddTask(ctx, task)
+	err = rep.AddTask(ctx, chatID, task)
 
 	if err != nil {
 		bot.Send(tgbotapi.NewMessage(chatID, "❌ Ошибка при добавлении в базу."))

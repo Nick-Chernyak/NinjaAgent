@@ -23,7 +23,7 @@ func Done(rep *storage.DayTasksRepo, bot *tgbotapi.BotAPI, chatID int64, ctx con
 		return
 	}
 
-	err = rep.MarkTaskAsDone(ctx, taskNum-1)
+	err = rep.MarkTaskAsDone(ctx, chatID, taskNum-1)
 
 	if err != nil {
 		bot.Send(tgbotapi.NewMessage(chatID, "❌ Ошибка при обновлении задачи."))

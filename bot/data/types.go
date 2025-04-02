@@ -7,9 +7,10 @@ import (
 )
 
 type Day struct {
-	ID    primitive.ObjectID `bson:"_id,omitempty"`
-	Tasks []Task             `bson:"tasks"`
-	Date  time.Time          `bson:"date"`
+	ID     primitive.ObjectID `bson:"_id,omitempty"`
+	Tasks  []Task             `bson:"tasks"`
+	Date   time.Time          `bson:"date"`
+	ChatID int64              `bson:"chat_id"`
 }
 
 type Task struct {
