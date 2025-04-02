@@ -23,6 +23,11 @@ func main() {
 
 	mongoURI := os.Getenv("MONGO_URI")
 	tgToken := os.Getenv("TG_TOKEN")
+	allowedGroupChatId, err := strconv.ParseInt(os.Getenv("ALLOWED_GROUP_CHAT"), 10, 64)
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(0)
+	}
 	allowedUsers, err := parseInt64ListFromEnv("ALLOWED_USERS")
 	if err != nil {
 		log.Fatal(err)
@@ -48,12 +53,12 @@ func main() {
 			continue
 		}
 
-		if containsId(allowedUsers, int64(update.Message.From.ID)) == false {
+		if !slices.Contains(allowedUsers, int64(update.Message.From.ID)) {
 			bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "❌ У вас нет доступа к этому боту."))
 			continue
 		}
 
-		chatID := update.Message.Chat.ID
+		chatID := getchatID(update, allowedGroupChatId)
 		cmd := update.Message.Command()
 		args := update.Message.CommandArguments()
 
@@ -76,10 +81,6 @@ func initMongo(mongoURI string) *mongo.Client {
 	return client
 }
 
-func containsId(slice []int64, val int64) bool {
-	return slices.Contains(slice, val)
-}
-
 func parseInt64ListFromEnv(envVar string) ([]int64, error) {
 	raw := os.Getenv(envVar)
 	if raw == "" {
@@ -98,4 +99,11 @@ func parseInt64ListFromEnv(envVar string) ([]int64, error) {
 	}
 
 	return result, nil
+}
+
+func getchatID(upd tgbotapi.Update, allowed int64) int64 {
+	if upd.Message.Chat.ID == allowed && upd.Message.Chat.Type == "group" {
+		return upd.Message.Chat.ID
+	}
+	return upd.Message.From.ID
 }
