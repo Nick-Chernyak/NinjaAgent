@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -12,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"ninja-agent/bot/background"
+	"slices"
 )
 
 func main() {
@@ -21,14 +23,11 @@ func main() {
 
 	mongoURI := os.Getenv("MONGO_URI")
 	tgToken := os.Getenv("TG_TOKEN")
-	allowedUserIds := os.Getenv("ALLOWED_USER")
-	if allowedUserIds == "" {
-		fmt.Println("ALLOWED_USER is not set")
-		return
+	allowedUsers, err := parseInt64ListFromEnv("ALLOWED_USERS")
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(0)
 	}
-
-	parts := strings.Split(allowedUserIds, ",")
-	allowedUsers := make([]int64, 0, len(parts))
 	mongoClient := initMongo(mongoURI)
 	bot, err := tgbotapi.NewBotAPI(tgToken)
 	if err != nil {
@@ -78,10 +77,25 @@ func initMongo(mongoURI string) *mongo.Client {
 }
 
 func containsId(slice []int64, val int64) bool {
-	for _, v := range slice {
-		if v == val {
-			return true
-		}
+	return slices.Contains(slice, val)
+}
+
+func parseInt64ListFromEnv(envVar string) ([]int64, error) {
+	raw := os.Getenv(envVar)
+	if raw == "" {
+		return nil, fmt.Errorf("env var %q is not set", envVar)
 	}
-	return false
+
+	parts := strings.Split(raw, ",")
+	result := make([]int64, 0, len(parts))
+
+	for _, p := range parts {
+		n, err := strconv.ParseInt(p, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid int64 in %q: %v", envVar, err)
+		}
+		result = append(result, n)
+	}
+
+	return result, nil
 }
