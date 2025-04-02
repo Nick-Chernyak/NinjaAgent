@@ -57,8 +57,8 @@ func main() {
 		cmd := update.Message.Command()
 		args := update.Message.CommandArguments()
 
-		if hanlder, ok := executor.handlers[cmd]; ok {
-			hanlder(chatID, context.Background(), args)
+		if handler, ok := executor.handlers[cmd]; ok {
+			handler(chatID, context.Background(), args)
 		} else {
 			bot.Send(tgbotapi.NewMessage(chatID, "❌ Неизвестная команда."))
 		}
