@@ -50,13 +50,13 @@ func ensureDay(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64) error 
 	}
 
 	if count > 0 {
-		log.Printf("🗓️ День уже существует для чата %d.", chatID)
+		log.Printf("🗓️ День уже существует для чата %d. Пропускаем создание.\n", chatID)
 		return nil
 	}
 
 	day := data.Day{
 		Date:   today,
-		Tasks:  generateRecurringTasks(),
+		Tasks:  append(generateRecurringTasks(), getyesterdayNotComplTasks(col, chatID)...),
 		ChatID: chatID,
 	}
 
@@ -87,4 +87,23 @@ func currentdayAndchatFilter(chatID int64) bson.M {
 		"date":    utils.DateOnly(time.Now()),
 		"chat_id": chatID,
 	}
+}
+
+func getyesterdayNotComplTasks(col *mongo.Collection, cahtID int64) []data.Task {
+	yesterdayDateTime := utils.Yesterday(time.Now())
+	var yesterday data.Day
+	err := col.FindOne(context.Background(), bson.M{"date": yesterdayDateTime, "chat_id": cahtID}).Decode(&yesterday)
+	if err != nil {
+		log.Println("Error getting yesterday's tasks:", err)
+		return []data.Task{}
+	}
+
+	var notCompletedTasks []data.Task
+	for _, task := range yesterday.Tasks {
+		if !task.IsDone {
+			notCompletedTasks = append(notCompletedTasks, task)
+		}
+	}
+
+	return notCompletedTasks
 }

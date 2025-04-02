@@ -61,6 +61,31 @@ func (repo DayTasksRepo) AddTask(ctx context.Context, chatID int64, task data.Ta
 	return err
 }
 
+func (repo DayTasksRepo) AddRangeTasks(ctx context.Context, chatID int64, taskIndex int, task data.Task) error {
+
+	update := bson.M{
+		"$push": bson.M{
+			"tasks": bson.M{
+				"$each":     []data.Task{task},
+				"$position": taskIndex,
+			},
+		},
+	}
+
+	result, err := repo.collection.UpdateOne(ctx, currentdayAndchatFilter(chatID), update)
+
+	if err != nil {
+		return err
+	}
+
+	if result.MatchedCount == 0 {
+		return fmt.Errorf("no task found at index %d", taskIndex)
+	}
+
+	return nil
+
+}
+
 func (repo DayTasksRepo) RemoveTask(ctx context.Context, chatID int64, taskIndex int) error {
 
 	var result TaskProj
