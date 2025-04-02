@@ -6,10 +6,14 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	"ninja-agent/bot/background"
+	"slices"
 )
 
 func main() {
@@ -19,10 +23,12 @@ func main() {
 
 	mongoURI := os.Getenv("MONGO_URI")
 	tgToken := os.Getenv("TG_TOKEN")
-	allowedUserStr := os.Getenv("ALLOWED_USER")
-
-	coll := initMongoAndgetcoll(mongoURI)
-	allowedUser := setAllowedUser(allowedUserStr)
+	allowedUsers, err := parseInt64ListFromEnv("ALLOWED_USERS")
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(0)
+	}
+	mongoClient := initMongo(mongoURI)
 	bot, err := tgbotapi.NewBotAPI(tgToken)
 	if err != nil {
 		log.Fatal(err)
@@ -33,14 +39,16 @@ func main() {
 	u.Timeout = 60
 	updates := bot.GetUpdatesChan(u)
 
-	StartDayWatcher(context.Background(), coll, bot, allowedUser)
+	background.StartDayWatcher(context.Background(), mongoClient.Database("ninja_agent").Collection("todos"), bot, allowedUsers)
+
+	executor := NewCommandExecutor(mongoClient, bot)
 
 	for update := range updates {
 		if update.Message == nil || !update.Message.IsCommand() {
 			continue
 		}
 
-		if update.Message.From.ID != allowedUser {
+		if containsId(allowedUsers, int64(update.Message.From.ID)) == false {
 			bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "❌ У вас нет доступа к этому боту."))
 			continue
 		}
@@ -49,43 +57,15 @@ func main() {
 		cmd := update.Message.Command()
 		args := update.Message.CommandArguments()
 
-		switch cmd {
-		case "todo":
-			err = Todo(coll, bot, chatID, context.Background(), args)
-			if err != nil {
-				log.Println("Error adding todo:", err)
-			}
-			postShow(coll, bot, chatID, context.Background())
-
-		case "show":
-			err = Show(coll, bot, chatID, context.Background())
-			if err != nil {
-				log.Println("Error showing todos:", err)
-			}
-		case "done":
-			err = Done(coll, bot, chatID, context.Background(), args)
-			if err != nil {
-				log.Println("Error marking todo as done:", err)
-			}
-			postShow(coll, bot, chatID, context.Background())
-		case "remove":
-			err = Remove(coll, bot, chatID, context.Background(), args)
-			if err != nil {
-				log.Println("Error removing todo:", err)
-			}
-			postShow(coll, bot, chatID, context.Background())
+		if handler, ok := executor.handlers[cmd]; ok {
+			handler(chatID, context.Background(), args)
+		} else {
+			bot.Send(tgbotapi.NewMessage(chatID, "❌ Неизвестная команда."))
 		}
 	}
 }
 
-func postShow(coll *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64, ctx context.Context) {
-	err := Show(coll, bot, chatID, context.Background())
-	if err != nil {
-		log.Println("Error showing todos:", err)
-	}
-}
-
-func initMongoAndgetcoll(mongoURI string) *mongo.Collection {
+func initMongo(mongoURI string) *mongo.Client {
 	fmt.Println("Connecting to MongoDB...")
 	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
@@ -93,14 +73,29 @@ func initMongoAndgetcoll(mongoURI string) *mongo.Collection {
 		log.Fatal(err)
 	}
 
-	return client.Database("ninja_agent").Collection("todos")
+	return client
 }
 
-func setAllowedUser(allowedUsersStr string) int64 {
-	allowedUser, err := strconv.ParseInt(allowedUsersStr, 10, 64)
-	if err != nil {
-		log.Fatalf("Invalid ALLOWED_USER value: %v", err)
+func containsId(slice []int64, val int64) bool {
+	return slices.Contains(slice, val)
+}
+
+func parseInt64ListFromEnv(envVar string) ([]int64, error) {
+	raw := os.Getenv(envVar)
+	if raw == "" {
+		return nil, fmt.Errorf("env var %q is not set", envVar)
 	}
 
-	return allowedUser
+	parts := strings.Split(raw, ",")
+	result := make([]int64, 0, len(parts))
+
+	for _, p := range parts {
+		n, err := strconv.ParseInt(p, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid int64 in %q: %v", envVar, err)
+		}
+		result = append(result, n)
+	}
+
+	return result, nil
 }

@@ -1,4 +1,4 @@
-package main
+package background
 
 import (
 	"context"
@@ -10,9 +10,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+
+	"ninja-agent/bot/data"
+	"ninja-agent/bot/utils"
 )
 
-func StartDayWatcher(ctx context.Context, col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64) {
+func StartDayWatcher(ctx context.Context, col *mongo.Collection, bot *tgbotapi.BotAPI, allowedUsers []int64) {
 
 	fmt.Println("🕒 Запуск DayWatcher...")
 
@@ -23,9 +26,14 @@ func StartDayWatcher(ctx context.Context, col *mongo.Collection, bot *tgbotapi.B
 				log.Println("📴 DayWatcher остановлен")
 				return
 			default:
-				err := ensureDay(col, bot, chatID)
-				if err != nil {
-					log.Println("DayWatcher error:", err)
+				for _, chatID := range allowedUsers {
+					err := ensureDay(col, bot, chatID)
+
+					if err != nil {
+						log.Println("DayWatcher error:", err)
+					}
+
+					log.Printf("🗓️ Проверка на новый день для чата %d завершена.\n", chatID)
 				}
 				time.Sleep(1 * time.Hour)
 			}
@@ -34,21 +42,22 @@ func StartDayWatcher(ctx context.Context, col *mongo.Collection, bot *tgbotapi.B
 }
 
 func ensureDay(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64) error {
-	today := DateOnly(time.Now())
+	today := utils.DateOnly(time.Now())
 
-	filter := bson.M{"date": today}
-	count, err := col.CountDocuments(context.Background(), filter)
+	count, err := col.CountDocuments(context.Background(), currentdayAndchatFilter(chatID))
 	if err != nil {
 		return err
 	}
 
 	if count > 0 {
+		log.Printf("🗓️ День уже существует для чата %d.", chatID)
 		return nil
 	}
 
-	day := Day{
-		Date:  today,
-		Tasks: generateRecurringTasks(),
+	day := data.Day{
+		Date:   today,
+		Tasks:  generateRecurringTasks(),
+		ChatID: chatID,
 	}
 
 	_, err = col.InsertOne(context.Background(), day)
@@ -62,19 +71,20 @@ func ensureDay(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64) error 
 	return nil
 }
 
-func generateRecurringTasks() []Task {
-	return []Task{
-		{
-			ID:          primitive.NewObjectID(),
-			Description: "🌅 Утренняя медитация",
-			CreatedAt:   time.Now(),
-			IsDone:      false,
-		},
+func generateRecurringTasks() []data.Task {
+	return []data.Task{
 		{
 			ID:          primitive.NewObjectID(),
 			Description: "📓 Написать 3 мысли",
 			CreatedAt:   time.Now(),
 			IsDone:      false,
 		},
+	}
+}
+
+func currentdayAndchatFilter(chatID int64) bson.M {
+	return bson.M{
+		"date":    utils.DateOnly(time.Now()),
+		"chat_id": chatID,
 	}
 }
