@@ -32,8 +32,10 @@ func StartDayWatcher(ctx context.Context, col *mongo.Collection, bot *tgbotapi.B
 					if err != nil {
 						log.Println("DayWatcher error:", err)
 					}
-					time.Sleep(1 * time.Hour)
+
+					log.Printf("🗓️ Проверка на новый день для чата %d завершена.\n", chatID)
 				}
+				time.Sleep(1 * time.Hour)
 			}
 		}
 	}()
@@ -48,6 +50,7 @@ func ensureDay(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64) error 
 	}
 
 	if count > 0 {
+		log.Printf("🗓️ День уже существует для чата %d.", chatID)
 		return nil
 	}
 
