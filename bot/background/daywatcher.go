@@ -39,8 +39,7 @@ func StartDayWatcher(ctx context.Context, col *mongo.Collection, bot *tgbotapi.B
 func ensureDay(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64) error {
 	today := utils.DateOnly(time.Now())
 
-	filter := bson.M{"date": today}
-	count, err := col.CountDocuments(context.Background(), filter)
+	count, err := col.CountDocuments(context.Background(), currentdayAndchatFilter(chatID))
 	if err != nil {
 		return err
 	}
@@ -50,8 +49,9 @@ func ensureDay(col *mongo.Collection, bot *tgbotapi.BotAPI, chatID int64) error 
 	}
 
 	day := data.Day{
-		Date:  today,
-		Tasks: generateRecurringTasks(),
+		Date:   today,
+		Tasks:  generateRecurringTasks(),
+		ChatID: chatID,
 	}
 
 	_, err = col.InsertOne(context.Background(), day)
@@ -73,5 +73,12 @@ func generateRecurringTasks() []data.Task {
 			CreatedAt:   time.Now(),
 			IsDone:      false,
 		},
+	}
+}
+
+func currentdayAndchatFilter(chatID int64) bson.M {
+	return bson.M{
+		"date":    utils.DateOnly(time.Now()),
+		"chat_id": chatID,
 	}
 }
