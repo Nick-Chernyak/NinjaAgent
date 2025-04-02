@@ -35,7 +35,7 @@ func main() {
 	u.Timeout = 60
 	updates := bot.GetUpdatesChan(u)
 
-	background.StartDayWatcher(context.Background(), mongoClient.Database("ninja-agent").Collection("todos"), bot, allowedUser)
+	background.StartDayWatcher(context.Background(), mongoClient.Database("ninja_agent").Collection("todos"), bot, allowedUser)
 
 	executor := NewCommandExecutor(mongoClient, bot)
 
