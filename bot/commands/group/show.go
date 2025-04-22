@@ -7,8 +7,8 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
-	"ninja-agent/bot/data"
-	"ninja-agent/bot/storage"
+	"ninja-agent/data"
+	"ninja-agent/data/storage"
 )
 
 func Show(rep *storage.GroupTaskRepo, bot *tgbotapi.BotAPI, chatID int64, ctx context.Context) (err error) {

@@ -4,15 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"ninja-agent/data"
+	"ninja-agent/utils"
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-
-	"ninja-agent/bot/data"
-	"ninja-agent/bot/utils"
 )
 
 func StartDayWatcher(ctx context.Context, db *mongo.Database, bot *tgbotapi.BotAPI, allowedUsers []int64) {

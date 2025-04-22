@@ -3,8 +3,8 @@ package storage
 import (
 	"context"
 	"fmt"
-	"ninja-agent/bot/data"
-	"ninja-agent/bot/utils"
+	"ninja-agent/data"
+	"ninja-agent/utils"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"

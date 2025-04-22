@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"ninja-agent/bot/data"
-	"ninja-agent/bot/storage"
+	"ninja-agent/data"
+	"ninja-agent/data/storage"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )

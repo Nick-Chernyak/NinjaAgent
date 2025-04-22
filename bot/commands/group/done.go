@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"strings"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"ninja-agent/data/storage"
 
-	"ninja-agent/bot/storage"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 func Done(rep *storage.GroupTaskRepo, bot *tgbotapi.BotAPI, chatID int64, ctx context.Context, args string) (err error) {

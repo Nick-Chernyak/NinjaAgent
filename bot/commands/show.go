@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"ninja-agent/data"
+	"ninja-agent/data/storage"
 
-	"ninja-agent/bot/data"
-	"ninja-agent/bot/storage"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 func Show(rep *storage.DayTasksRepo, bot *tgbotapi.BotAPI, chatID int64, ctx context.Context) (err error) {

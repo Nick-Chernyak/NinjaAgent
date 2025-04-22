@@ -7,7 +7,7 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
-	"ninja-agent/bot/storage"
+	"ninja-agent/data/storage"
 )
 
 func Remove(rep *storage.DayTasksRepo, bot *tgbotapi.BotAPI, chatID int64, ctx context.Context, args string) (err error) {

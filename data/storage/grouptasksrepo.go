@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"ninja-agent/bot/data"
+	"ninja-agent/data"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"

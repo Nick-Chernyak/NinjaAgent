@@ -3,7 +3,7 @@ package bot
 import (
 	"context"
 	grcom "ninja-agent/bot/commands/group"
-	"ninja-agent/bot/storage"
+	"ninja-agent/data/storage"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"go.mongodb.org/mongo-driver/mongo"
