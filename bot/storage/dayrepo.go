@@ -38,6 +38,8 @@ func (repo DayTasksRepo) GetCurrentDay(ctx context.Context, chatID int64) (data.
 
 func (repo DayTasksRepo) GetCurrentTasks(ctx context.Context, chatID int64) ([]data.Task, error) {
 	var result TaskProj
+	var date = utils.DateOnly(time.Now().UTC())
+	fmt.Println(date)
 	err := repo.collection.FindOne(ctx, currentdayAndchatFilter(chatID)).Decode(&result)
 
 	if err != nil {
@@ -125,7 +127,7 @@ func (repo DayTasksRepo) MarkTaskAsDone(ctx context.Context, chatID int64, taskI
 
 func currentdayAndchatFilter(chatID int64) bson.M {
 	return bson.M{
-		"date":    utils.DateOnly(time.Now()),
+		"date":    utils.DateOnly(time.Now().UTC()),
 		"chat_id": chatID,
 	}
 }
